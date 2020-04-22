@@ -27,12 +27,15 @@ class rps
         }
         catch (InterruptedException e) {}
 
+        // Can see how accurate it is by see if the wins are close to
+        // the theoretical probability draws == 33% and Hands == 22%
         System.out.println
         (
-        "Draws: " + p2.draws +
+        " Draws: " + p2.draws +
         " scissorsWin: " + p2.scissorsWin +
         " rockWin: " + p2.rockWin +
-        " paperWin: " + p2.paperWin
+        " paperWin: " + p2.paperWin +
+        " total: " + (p2.draws + p2.scissorsWin + p2.rockWin + p2.paperWin)
         );
     }
 }
@@ -79,6 +82,16 @@ class rpsTask implements Runnable
 
     public Hands getHand() { return hand; }
 
+    /**
+    *@pream i the current round, and an instance of Hands to put the curr hand
+    *
+    *
+    *@return gives the current thread a rand enum from Hands
+    *
+    *
+    *@def This is how a thread choses at rand to use in the next round
+    *
+    */
     private void shoot(int i)
     {
             hand = Hands.rand();
@@ -89,7 +102,17 @@ class rpsTask implements Runnable
             );
     }
 
-    private void winLoss(Hands hand, int i)
+    /**
+    *@pream hand is what the current thread used, i is the round
+    *       requires an opponent thread to compete against
+    *
+    *@return prints if this thread won or lost and increments a counter for 
+    *        what they use to win
+    *
+    *@def A switch statement that figures out who won or lost
+    *     and what they used to win
+    */
+    private synchronized void winLoss(Hands hand, int i)
     {
         if( opponent.getHand() == hand )
         {
@@ -168,18 +191,19 @@ class rpsTask implements Runnable
                     break;
             }
         }
+
     }
 
     public void run ()
     {
         for (int i = 0; i < rounds; i++)
         {
-            shoot(i);
             try
             {
+                shoot(i);
                 barrier.await();
+                winLoss(hand, i);
             } catch (InterruptedException | BrokenBarrierException e) {}
-            winLoss(hand, i);
         }
     }
 }
