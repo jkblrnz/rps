@@ -11,6 +11,9 @@ class rps
         rpsTask p1 = new rpsTask ( 1, rounds, barrier );
         rpsTask p2 = new rpsTask ( 2, rounds, barrier );
 
+        p1.setOpponent(p2);
+        p2.setOpponent(p1);
+
         Thread t1 = new Thread(p1);
         Thread t2 = new Thread(p2);
 
@@ -27,8 +30,6 @@ class rps
         System.out.println
         (
         "Draws: " + p2.draws +
-        " p1Win: " + p2.p1Win +
-        " p2Win: " +  p2.p2Win +
         " scissorsWin: " + p2.scissorsWin +
         " rockWin: " + p2.rockWin +
         " paperWin: " + p2.paperWin
@@ -58,10 +59,9 @@ class rpsTask implements Runnable
                 draws = 0,
                 scissorsWin = 0,
                 rockWin = 0,
-                paperWin = 0,
-                p1Win = 0,
-                p2Win = 0;
+                paperWin = 0;
 
+    private rpsTask opponent;
     CyclicBarrier barrier;
     Hands hand;
 
@@ -70,6 +70,11 @@ class rpsTask implements Runnable
         this.id = id;
         this.rounds = rounds;
         this.barrier = barrier;
+    }
+
+    public void setOpponent(rpsTask opponent)
+    {
+        this.opponent = opponent;
     }
 
     public Hands getHand() { return hand; }
@@ -84,8 +89,85 @@ class rpsTask implements Runnable
             );
     }
 
-    private synchronized void winLoss()
+    private void winLoss(Hands hand, int i)
     {
+        if( opponent.getHand() == hand )
+        {
+            draws++;
+            System.out.println
+            (
+            "Round " + i + ": " +
+            "Player " + id + " draw"
+            );
+        }
+        else
+        {
+            switch(hand)
+            {
+                case Scissors:
+                    if ( opponent.getHand() == Hands.Rock )
+                    {
+                        rockWin++;
+                        System.out.println
+                        (
+                        "Round " + i + ": " +
+                        "Player " + id + " loses"
+                        );
+                    }
+                    else
+                    {
+                        scissorsWin++;
+                        System.out.println
+                        (
+                        "Round " + i + ": " +
+                        "Player " + id + " wins!"
+                        );
+                    }
+                    break;
+                case Rock:
+                    if ( opponent.getHand() == Hands.Paper )
+                    {
+                        paperWin++;
+                        System.out.println
+                        (
+                        "Round " + i + ": " +
+                        "Player " + id + " loses"
+                        );
+                    }
+                    else
+                    {
+                        rockWin++;
+                        System.out.println
+                        (
+                        "Round " + i + ": " +
+                        "Player " + id + " wins!"
+                        );
+                    }
+                    break;
+                case Paper:
+                    if ( opponent.getHand() == Hands.Scissors )
+                    {
+                        scissorsWin++;
+                        System.out.println
+                        (
+                        "Round " + i + ": " +
+                        "Player " + id + " loses"
+                        );
+                    }
+                    else
+                    {
+                        paperWin++;
+                        System.out.println
+                        (
+                        "Round " + i + ": " +
+                        "Player " + id + " wins!"
+                        );
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public void run ()
@@ -97,6 +179,7 @@ class rpsTask implements Runnable
             {
                 barrier.await();
             } catch (InterruptedException | BrokenBarrierException e) {}
+            winLoss(hand, i);
         }
     }
 }
